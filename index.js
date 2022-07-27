@@ -1,12 +1,14 @@
 const webdriver = require('selenium-webdriver');
 const until = require("selenium-webdriver/lib/until");
-const {By} = require('selenium-webdriver')
+const {By} = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
-const dotenv = require("dotenv")
-const fs = require('fs')
-const express = require("express");
-const app = express;
+const dotenv = require("dotenv");
+const fs = require('fs');
+const express = require("express")
+const app = express();
 const port = 3000
+
+
 
 app.use(express.json())
 
