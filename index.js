@@ -18,7 +18,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
 let driver = new webdriver.Builder()
     .forBrowser(webdriver.Browser.CHROME)
-    .setChromeOptions("--user-data-dir=C:\Users\Yaman\AppData\Local\Google\Chrome\User Data\'")
+    .setChromeOptions()
     .build();
 
 console.log("Driver Built !!")
