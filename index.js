@@ -1,16 +1,10 @@
 const webdriver = require('selenium-webdriver');
 const until = require("selenium-webdriver/lib/until");
-const {By} = require('selenium-webdriver');
+const {By} = require('selenium-webdriver')
 const chrome = require('selenium-webdriver/chrome');
-const dotenv = require("dotenv");
-const fs = require('fs');
-const express = require("express")
-const app = express();
-const port = 3000
+const dotenv = require("dotenv")
+const fs = require('fs')
 
-
-
-app.use(express.json())
 
 dotenv.config()
 
@@ -18,7 +12,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
 let driver = new webdriver.Builder()
     .forBrowser(webdriver.Browser.CHROME)
-    .setChromeOptions()
+    .setChromeOptions("--user-data-dir=C:\Users\Yaman\AppData\Local\Google\Chrome\User Data\'")
     .build();
 
 console.log("Driver Built !!")
@@ -58,7 +52,7 @@ async function get_user_followers(username) {
     let response = await driver.get("https://twitter.com/i/flow/login");
     let usernameArea = By.xpath("/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div/div/div/div[5]/label/div/div[2]/div/input");
     await driver.wait(webdriver.until.elementLocated(usernameArea,10000));
-    console.log("Username Input Detected!");
+    console.log("Login Page Detected!");
     
     const usernameInput = await driver.findElement(usernameArea);
     await usernameInput.sendKeys(process.env.tw_username);
@@ -70,14 +64,14 @@ async function get_user_followers(username) {
 
     let passwordArea = By.xpath("/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input");
     await driver.wait(webdriver.until.elementLocated(passwordArea,10000));
-    console.log("Password Input Detected!");
+    //console.log("Password Input Detected!");
 
     const passwordInput = await driver.findElement(passwordArea);
     await passwordInput.sendKeys(process.env.tw_pass);
 
     let loginButtonElement = By.xpath("/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div[1]/div/div/div");
     const loginButton = await driver.findElement(loginButtonElement);
-    console.log(await loginButton.getRect())
+    //console.log(await loginButton.getRect())
     loginButton.click();
 
     let homePage = By.xpath("/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[1]/div[1]/div/div/div/div/div[1]/div/h2/span")
@@ -89,17 +83,21 @@ async function get_user_followers(username) {
     let follower_container = By.xpath("/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/section/div/div");
                     
     await driver.wait(webdriver.until.elementLocated(follower_container,10000));
-    console.log("Follower container detected.");
+    //console.log("Follower container detected.");
 
     let storage = []
     let follower_divs;
-    let tried = 0
+    let tried = 0;
+    let startvar;
+
     while (tried < 12) {
-        console.log("looking for new divs");
+        startvar = storage.length
+
+        //console.log("looking for new divs");
         await driver.wait(webdriver.until.elementLocated(By.xpath(`/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/section/div/div/div/div`),10000))
         
         follower_divs = await driver.findElements(By.xpath("/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/section/div/div/div/div"));
-        console.log(follower_divs.length);
+        //console.log(follower_divs.length);
 
         for (i=0;i < follower_divs.length ;i++) {
 
@@ -110,11 +108,16 @@ async function get_user_followers(username) {
                 if (!(storage.includes(follower_username))) {
 
                     storage.push(follower_username);
-                    console.log("Pushed "+follower_username);
+                    //console.log("Pushed "+follower_username);
                     let scrollby = "window.scrollBy(0, "+ (await follower_divs[i].getRect()).height.toString()+");"
                     await driver.executeScript(scrollby);
                     
-                   
+                    fs.appendFile('./result.txt', follower_username+"\n", err => {
+                        if (err) {
+                          console.error(err)
+                          return
+                        }
+                    })
 
                 }
             }
@@ -123,24 +126,22 @@ async function get_user_followers(username) {
             }
             
         }
+        endvar = storage.length
+
+        if (endvar == startvar) {
+            tried += 1;
+        }
+        else {
+            tried = 0;
+            console.log("Storage Amount: " + storage.length.toString());
+        }
         
-        console.log("Storage Amount: " + storage.length.toString());
-        await delay(100);
+
         //console.log(storage.length)
     }
-    return storage;
 }
 
 
-app.post("/api", (req, res) => {
-	console.log("App Started!")
-    var username = req.query.username;
+get_user_followers("DaJenus")
 
-    console.log(get_user_followers(username));
-    
-	
-})
-
-app.listen(port, () => {
-	console.log("Listening port: " + port)
-})
+console.log("Results saved in result.txt..")
